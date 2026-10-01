@@ -1,0 +1,8 @@
+{
+  "name": "FIJI HAPS",
+  "description": "Everything Fiji. All in One Place. The ultimate travel companion for accommodation, food & nightlife, transport, attractions, activities, events, interactive map, village directory, and essential visitor guide.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
