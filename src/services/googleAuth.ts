@@ -1,17 +1,13 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
 import { 
-  getAuth, 
   signInWithPopup, 
   GoogleAuthProvider, 
   onAuthStateChanged, 
   User, 
   signOut 
 } from 'firebase/auth';
-import firebaseConfig from '../../firebase-applet-config.json';
+import { auth } from '../lib/firebase';
 
-// Initialize Firebase App singleton
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+export { auth };
 
 // All Google Workspace Scopes requested by user
 export const WORKSPACE_SCOPES = [

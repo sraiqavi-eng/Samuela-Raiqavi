@@ -198,10 +198,14 @@ export const OwnerBackendModal: React.FC<OwnerBackendModalProps> = ({ isOpen, on
     try {
       const res = await googleSignIn();
       if (res && res.user && res.user.email) {
+        const idToken = await res.user.getIdToken();
         const loginRes = await fetch('/api/owner/auth/login', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: res.user.email })
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+          },
+          body: JSON.stringify({ idToken })
         });
 
         const data = await loginRes.json();
