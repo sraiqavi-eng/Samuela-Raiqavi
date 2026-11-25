@@ -5,7 +5,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { MainTab, ListingItem, BookingRecord } from './types';
-import { ALL_LISTINGS } from './data/fijiData';
+import {
+  ALL_LISTINGS,
+  HERO_IMAGE,
+  CULTURE_IMAGE,
+  REEF_IMAGE,
+  VILLAGE_IMAGE,
+  DINING_IMAGE,
+} from './data/fijiData';
 import { TopNav } from './components/TopNav';
 import { BottomNav } from './components/BottomNav';
 import { ExploreView } from './components/ExploreView';
@@ -42,7 +49,17 @@ export default function App() {
   const [bookings, setBookings] = useState<BookingRecord[]>(() => {
     try {
       const stored = localStorage.getItem(BOOKINGS_STORAGE_KEY);
-      if (stored) return JSON.parse(stored);
+      if (stored) {
+        const parsed: BookingRecord[] = JSON.parse(stored);
+        return parsed.map((b) => {
+          if (b.image?.includes('fiji_culture_kava')) return { ...b, image: CULTURE_IMAGE };
+          if (b.image?.includes('fiji_coral_coast_reef')) return { ...b, image: REEF_IMAGE };
+          if (b.image?.includes('fiji_navala_village')) return { ...b, image: VILLAGE_IMAGE };
+          if (b.image?.includes('fiji_nightlife_food')) return { ...b, image: DINING_IMAGE };
+          if (b.image?.startsWith('/src/assets/')) return { ...b, image: HERO_IMAGE };
+          return b;
+        });
+      }
       
       // Default sample confirmed booking for instant demonstration
       return [
@@ -53,7 +70,7 @@ export default function App() {
           category: 'accommodation',
           subType: 'Resorts',
           locationName: 'Malolo Island, Mamanucas',
-          image: '/src/assets/images/hero_fiji_islands_1790736422977.jpg',
+          image: HERO_IMAGE,
           createdAt: new Date().toISOString(),
           status: 'confirmed',
           startDate: '2026-10-14',

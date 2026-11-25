@@ -11,11 +11,17 @@ import {
   PhraseItem
 } from '../types';
 
-export const HERO_IMAGE = '/src/assets/images/hero_fiji_islands_1790736422977.jpg';
-export const CULTURE_IMAGE = '/src/assets/images/fiji_culture_kava_1790736439086.jpg';
-export const REEF_IMAGE = '/src/assets/images/fiji_coral_coast_reef_1790736452142.jpg';
-export const VILLAGE_IMAGE = '/src/assets/images/fiji_navala_village_1790736464382.jpg';
-export const DINING_IMAGE = '/src/assets/images/fiji_nightlife_food_1790736475960.jpg';
+import heroFijiImg from '../assets/images/hero_fiji_islands_1790736422977.jpg';
+import cultureKavaImg from '../assets/images/fiji_culture_kava_1790736439086.jpg';
+import coralCoastReefImg from '../assets/images/fiji_coral_coast_reef_1790736452142.jpg';
+import navalaVillageImg from '../assets/images/fiji_navala_village_1790736464382.jpg';
+import nightlifeFoodImg from '../assets/images/fiji_nightlife_food_1790736475960.jpg';
+
+export const HERO_IMAGE = heroFijiImg;
+export const CULTURE_IMAGE = cultureKavaImg;
+export const REEF_IMAGE = coralCoastReefImg;
+export const VILLAGE_IMAGE = navalaVillageImg;
+export const DINING_IMAGE = nightlifeFoodImg;
 
 export const ISLAND_REGIONS = [
   { id: 'all', label: 'All Regions' },
