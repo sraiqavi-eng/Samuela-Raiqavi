@@ -1,5 +1,5 @@
 import React from 'react';
-import { Compass, CalendarCheck, Coins, Search, Landmark } from 'lucide-react';
+import { Compass, CalendarCheck, Coins, Search } from 'lucide-react';
 import { MainTab } from '../types';
 
 interface TopNavProps {
@@ -8,7 +8,6 @@ interface TopNavProps {
   savedCount: number;
   onOpenSearch: () => void;
   onOpenCurrency: () => void;
-  onOpenOwnerPortal: () => void;
   onOpenGoogleWorkspace: () => void;
 }
 
@@ -17,7 +16,6 @@ export const TopNav: React.FC<TopNavProps> = ({
   savedCount,
   onOpenSearch,
   onOpenCurrency,
-  onOpenOwnerPortal,
   onOpenGoogleWorkspace
 }) => {
   return (
@@ -82,16 +80,6 @@ export const TopNav: React.FC<TopNavProps> = ({
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
             </svg>
             <span className="hidden md:inline text-xs font-bold text-slate-800">Workspace</span>
-          </button>
-
-          {/* App Owner & Bank Account Hub Button */}
-          <button
-            onClick={onOpenOwnerPortal}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-colors"
-            title="Owner Operations Portal"
-          >
-            <Landmark className="w-4 h-4 text-emerald-700" />
-            <span className="hidden lg:inline text-xs font-bold text-slate-800">Owner Hub</span>
           </button>
 
           {/* My Trip / Itinerary Pill */}

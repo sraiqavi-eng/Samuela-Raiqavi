@@ -27,7 +27,7 @@ import { SearchModal } from './components/SearchModal';
 import { CurrencyModal } from './components/CurrencyModal';
 import { OwnerBackendModal } from './components/OwnerBackendModal';
 import { GoogleWorkspaceModal } from './components/GoogleWorkspaceModal';
-import { ShieldCheck, Landmark } from 'lucide-react';
+import { Landmark } from 'lucide-react';
 
 const SAVED_STORAGE_KEY = 'fiji_haps_saved_items_v1';
 const BOOKINGS_STORAGE_KEY = 'fiji_haps_bookings_v1';
@@ -155,7 +155,6 @@ export default function App() {
         savedCount={savedIds.length + bookings.length}
         onOpenSearch={() => setIsSearchOpen(true)}
         onOpenCurrency={() => setIsCurrencyOpen(true)}
-        onOpenOwnerPortal={() => setIsOwnerPortalOpen(true)}
         onOpenGoogleWorkspace={() => setIsWorkspaceModalOpen(true)}
       />
 
@@ -290,15 +289,14 @@ export default function App() {
               <span>Google Workspace Hub</span>
             </button>
             <span className="text-slate-600">|</span>
+            <span className="text-slate-500">© 2026 Fiji Tourism Platform</span>
             <button
               onClick={() => setIsOwnerPortalOpen(true)}
-              className="text-slate-400 hover:text-emerald-400 flex items-center gap-1.5 transition-colors font-semibold"
+              aria-label="Owner access"
+              className="ml-1 p-1 text-slate-800/40 hover:text-slate-600/60 transition-colors cursor-default"
             >
-              <Landmark className="w-3.5 h-3.5 text-emerald-500" />
-              <span>Owner & Bank Payout Portal</span>
+              <Landmark className="w-1 h-1" />
             </button>
-            <span className="text-slate-600">|</span>
-            <span className="text-slate-500">© 2026 Fiji Tourism Platform</span>
           </div>
         </div>
       </footer>
