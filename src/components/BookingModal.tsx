@@ -151,8 +151,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     return Math.round(basePrice * guestCount);
   }, [item?.category, basePrice, nights, adults, children]);
 
-  // Backend receives 25% invisibly
-  const depositAmountFjd = Math.round(totalPriceFjd * 0.25);
+  // Backend receives 15% invisibly
+  const depositAmountFjd = Math.round(totalPriceFjd * 0.15);
   const balanceDueFjd = totalPriceFjd - depositAmountFjd;
 
   if (!isOpen || !item) return null;
@@ -182,7 +182,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       totalPriceFjd,
       depositAmountFjd, // stored in backend record for bank transfer
       balanceDueFjd,
-      commissionRate: 0.25,
+      commissionRate: 0.15,
       paymentMethod,
       providerEmail,
       providerPhone,
@@ -198,7 +198,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     };
 
     try {
-      // Send to Express backend API to route 25% directly to owner's bank account
+      // Send to Express backend API to route 15% directly to owner's bank account
       await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

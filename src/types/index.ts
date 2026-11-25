@@ -162,9 +162,9 @@ export interface BookingRecord {
   };
   optionSelected: string;
   totalPriceFjd: number;
-  depositAmountFjd: number; // 25% received by FIJI HAPS app
-  balanceDueFjd: number; // 75% due to operator / resort on arrival
-  commissionRate: number; // 0.25
+  depositAmountFjd: number; // 15% received by FIJI HAPS app
+  balanceDueFjd: number; // 85% due to operator / resort on arrival
+  commissionRate: number; // 0.15
   paymentMethod: 'credit_card' | 'pay_on_arrival' | 'deposit_online_balance_arrival';
   providerEmail?: string;
   providerPhone?: string;

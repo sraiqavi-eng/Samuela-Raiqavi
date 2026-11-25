@@ -17,6 +17,25 @@ let ownerSettings = {
   senderEmail: 'notifications@fijihaps.com'
 };
 
+// Owner Security & Authentication
+let ownerSecurity = {
+  authorizedEmails: ['sraiqavi@gmail.com'], // Primary owner email from metadata
+  masterPasscode: process.env.OWNER_PASSCODE || 'fiji2026', // Default owner access passcode
+  activeSessions: new Set<string>() // Active session tokens
+};
+
+// Helper middleware to strictly verify owner authentication before releasing any back-end information
+function requireOwnerAuth(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const token = (req.headers['x-owner-token'] as string) || (req.headers.authorization?.replace(/^Bearer\s+/i, ''));
+  if (!token || !ownerSecurity.activeSessions.has(token)) {
+    return res.status(401).json({ 
+      success: false, 
+      error: 'Unauthorized: Owner login is required to access back-end financial information.' 
+    });
+  }
+  next();
+}
+
 // In-memory persistent bank account settings for the app owner
 let ownerBankAccount = {
   bankName: 'Bank South Pacific (BSP) Fiji',
@@ -27,12 +46,12 @@ let ownerBankAccount = {
   settlementCurrency: 'FJD',
   payoutFrequency: 'Instant Automated Direct Deposit',
   status: 'active',
-  takeRatePercentage: 25, // 25% OF EVERY BOOKING DEPOSITED TO THIS ACCOUNT
-  totalPayoutsReceivedFjd: 1800,
+  takeRatePercentage: 15, // 15% OF EVERY BOOKING DEPOSITED TO THIS ACCOUNT
+  totalPayoutsReceivedFjd: 1080,
   lastTransferDate: new Date().toISOString()
 };
 
-// Backend bookings ledger recording each 25% bank deposit
+// Backend bookings ledger recording each 15% bank deposit
 let backendBookingsLedger = [
   {
     id: 'BK-SAMPLE-01',
@@ -40,8 +59,8 @@ let backendBookingsLedger = [
     customerName: 'Alexander Wright',
     listingName: 'Likuliku Lagoon Resort',
     grossBookingFjd: 7200,
-    owner25PercentCutFjd: 1800, // Exactly 25%
-    operatorShareFjd: 5400,
+    owner15PercentCutFjd: 1080, // Exactly 15%
+    operatorShareFjd: 6120, // 85%
     status: 'deposited_to_owner_bank',
     bankAccountTarget: 'BSP Fiji (•••• 6102)',
     transferDate: new Date().toISOString()
@@ -62,7 +81,7 @@ export interface DispatchedEmail {
   status: 'delivered' | 'sent';
   listingName: string;
   grossAmountFjd: number;
-  owner25PercentCutFjd?: number;
+  owner15PercentCutFjd?: number;
   operatorShareFjd?: number;
 }
 
@@ -73,17 +92,17 @@ let dispatchedEmailsLog: DispatchedEmail[] = [
     recipientType: 'backend_admin',
     to: 'sraiqavi@gmail.com',
     recipientName: 'FIJI HAPS Website Backend Admin',
-    subject: '🔔 [FIJI HAPS BACKEND ALERT] New Booking: Likuliku Lagoon Resort (Ref: FJ-HAPS-92841) - 25% Cut: FJD $1,800',
+    subject: '🔔 [FIJI HAPS BACKEND ALERT] New Booking: Likuliku Lagoon Resort (Ref: FJ-HAPS-92841) - 15% Cut: FJD $1,080',
     htmlBody: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f172a; color: #f8fafc; border-radius: 16px; overflow: hidden; border: 1px solid #334155;">
         <div style="background: linear-gradient(135deg, #059669, #0d9488); padding: 24px; text-align: center;">
           <h1 style="margin: 0; color: #ffffff; font-size: 20px; font-weight: 800; letter-spacing: 0.5px;">FIJI HAPS · WEBSITE BACKEND NOTIFICATION</h1>
-          <p style="margin: 4px 0 0 0; color: #ccfbf1; font-size: 13px;">New Confirmed Tourist Booking & 25% Bank Payout</p>
+          <p style="margin: 4px 0 0 0; color: #ccfbf1; font-size: 13px;">New Confirmed Tourist Booking & 15% Bank Payout</p>
         </div>
         <div style="padding: 24px;">
           <div style="background: #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 20px; border-left: 4px solid #10b981;">
-            <h3 style="margin: 0 0 8px 0; color: #10b981; font-size: 14px; text-transform: uppercase;">Bank Deposit Routing (25% Cut)</h3>
-            <p style="margin: 0; font-size: 18px; font-weight: bold; color: #34d399;">FJD $1,800.00</p>
+            <h3 style="margin: 0 0 8px 0; color: #10b981; font-size: 14px; text-transform: uppercase;">Bank Deposit Routing (15% Cut)</h3>
+            <p style="margin: 0; font-size: 18px; font-weight: bold; color: #34d399;">FJD $1,080.00</p>
             <p style="margin: 4px 0 0 0; font-size: 12px; color: #94a3b8;">Destination: Bank South Pacific (BSP) Fiji (•••• 6102)</p>
           </div>
           <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #cbd5e1;">
@@ -95,7 +114,7 @@ let dispatchedEmailsLog: DispatchedEmail[] = [
             <tr><td style="padding: 6px 0; color: #94a3b8;">Dates:</td><td style="padding: 6px 0;">2026-10-14 to 2026-10-18</td></tr>
             <tr><td style="padding: 6px 0; color: #94a3b8;">Package / Bure:</td><td style="padding: 6px 0;">Over-Water Bure</td></tr>
             <tr><td style="padding: 6px 0; color: #94a3b8;">Total Customer Gross:</td><td style="padding: 6px 0; font-weight: bold; color: #f8fafc;">FJD $7,200.00</td></tr>
-            <tr><td style="padding: 6px 0; color: #94a3b8;">Operator Net Payout (75%):</td><td style="padding: 6px 0;">FJD $5,400.00</td></tr>
+            <tr><td style="padding: 6px 0; color: #94a3b8;">Operator Net Payout (85%):</td><td style="padding: 6px 0;">FJD $6,120.00</td></tr>
           </table>
           <div style="margin-top: 20px; padding: 12px; background: #1e293b; border-radius: 8px; font-size: 11px; color: #94a3b8;">
             Provider Notification: Dispatched to reservations@likulikulagoonresort.com.fj
@@ -103,13 +122,13 @@ let dispatchedEmailsLog: DispatchedEmail[] = [
         </div>
       </div>
     `,
-    plainText: 'FIJI HAPS BACKEND ALERT: New booking FJ-HAPS-92841 for Likuliku Lagoon Resort. Gross: FJD $7,200. 25% Platform Cut: FJD $1,800. Provider notified.',
+    plainText: 'FIJI HAPS BACKEND ALERT: New booking FJ-HAPS-92841 for Likuliku Lagoon Resort. Gross: FJD $7,200. 15% Platform Cut: FJD $1,080. Provider notified.',
     sentAt: new Date().toISOString(),
     status: 'delivered',
     listingName: 'Likuliku Lagoon Resort',
     grossAmountFjd: 7200,
-    owner25PercentCutFjd: 1800,
-    operatorShareFjd: 5400
+    owner15PercentCutFjd: 1080,
+    operatorShareFjd: 6120
   },
   {
     id: 'EM-SAMPLE-01-PROVIDER',
@@ -140,7 +159,7 @@ let dispatchedEmailsLog: DispatchedEmail[] = [
               <tr><td style="padding: 6px 0; color: #64748b;">Check-in / Check-out:</td><td style="padding: 6px 0; font-weight: bold; color: #0f172a;">2026-10-14 to 2026-10-18</td></tr>
               <tr><td style="padding: 6px 0; color: #64748b;">Room / Bure:</td><td style="padding: 6px 0; color: #0f172a;">Over-Water Bure (2 Adults)</td></tr>
               <tr><td style="padding: 6px 0; color: #64748b;">Special Requests:</td><td style="padding: 6px 0; color: #0f172a;">Honeymoon couple, sunset overwater bure requested.</td></tr>
-              <tr><td style="padding: 6px 0; color: #64748b;">Operator Net Share:</td><td style="padding: 6px 0; font-weight: bold; color: #059669;">FJD $5,400.00</td></tr>
+              <tr><td style="padding: 6px 0; color: #64748b;">Operator Net Share:</td><td style="padding: 6px 0; font-weight: bold; color: #059669;">FJD $6,120.00</td></tr>
             </table>
           </div>
           <p style="font-size: 12px; color: #64748b; line-height: 1.4;">
@@ -149,12 +168,12 @@ let dispatchedEmailsLog: DispatchedEmail[] = [
         </div>
       </div>
     `,
-    plainText: 'NEW RESERVATION for Likuliku Lagoon Resort: Guest Alexander Wright, Voucher FJ-HAPS-92841, Dates: 2026-10-14 to 2026-10-18. Over-Water Bure. Operator Share: FJD $5,400.',
+    plainText: 'NEW RESERVATION for Likuliku Lagoon Resort: Guest Alexander Wright, Voucher FJ-HAPS-92841, Dates: 2026-10-14 to 2026-10-18. Over-Water Bure. Operator Share: FJD $6,120.',
     sentAt: new Date().toISOString(),
     status: 'delivered',
     listingName: 'Likuliku Lagoon Resort',
     grossAmountFjd: 7200,
-    operatorShareFjd: 5400
+    operatorShareFjd: 6120
   }
 ];
 
@@ -203,7 +222,7 @@ async function sendEmailNotification(emailData: {
 }
 
 // Function to dispatch both emails on confirmed booking
-async function dispatchBookingEmails(booking: any, owner25Percent: number, operatorShare: number) {
+async function dispatchBookingEmails(booking: any, owner15Percent: number, operatorShare: number) {
   const voucherCode = booking.voucherCode || `FJ-HAPS-${Math.floor(10000 + Math.random() * 90000)}`;
   const guestName = booking.guestInfo?.fullName || 'Tourist Guest';
   const guestEmail = booking.guestInfo?.email || 'guest@example.com';
@@ -222,18 +241,18 @@ async function dispatchBookingEmails(booking: any, owner25Percent: number, opera
   const providerEmail = booking.providerEmail || `reservations@${providerSlug}.com.fj`;
 
   // ================= 1. EMAIL TO BACKEND OF WEBSITE (ADMIN) =================
-  const adminSubject = `🔔 [FIJI HAPS BACKEND ALERT] New Booking: ${listingName} (Ref: ${voucherCode}) - 25% Revenue: FJD $${owner25Percent.toLocaleString()}`;
+  const adminSubject = `🔔 [FIJI HAPS BACKEND ALERT] New Booking: ${listingName} (Ref: ${voucherCode}) - 15% Revenue: FJD $${owner15Percent.toLocaleString()}`;
   const adminHtml = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #090d16; color: #f1f5f9; border-radius: 16px; overflow: hidden; border: 1px solid #1e293b;">
       <div style="background: linear-gradient(135deg, #059669, #0d9488); padding: 24px; text-align: center;">
         <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 800; color: #ccfbf1; background: rgba(0,0,0,0.2); padding: 4px 10px; rounded-full: 9999px;">FIJI HAPS BACKEND OPERATIONS</span>
         <h1 style="margin: 8px 0 0 0; color: #ffffff; font-size: 20px; font-weight: 800;">New Confirmed Tourist Booking</h1>
-        <p style="margin: 4px 0 0 0; color: #ccfbf1; font-size: 13px;">Automated 25% Take-Rate Deposited to Bank</p>
+        <p style="margin: 4px 0 0 0; color: #ccfbf1; font-size: 13px;">Automated 15% Take-Rate Deposited to Bank</p>
       </div>
       <div style="padding: 24px;">
         <div style="background: #111827; border-radius: 12px; padding: 18px; margin-bottom: 20px; border: 1px solid #059669;">
-          <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #10b981; letter-spacing: 1px;">25% App Platform Commission</div>
-          <div style="font-size: 26px; font-weight: 900; color: #34d399; margin: 4px 0; font-family: monospace;">FJD $${owner25Percent.toLocaleString()}</div>
+          <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #10b981; letter-spacing: 1px;">15% App Platform Commission</div>
+          <div style="font-size: 26px; font-weight: 900; color: #34d399; margin: 4px 0; font-family: monospace;">FJD $${owner15Percent.toLocaleString()}</div>
           <div style="font-size: 12px; color: #94a3b8;">
             Deposited Directly to: <strong>${ownerBankAccount.bankName}</strong> (•••• ${ownerBankAccount.accountNumber.slice(-4)})
           </div>
@@ -251,7 +270,7 @@ async function dispatchBookingEmails(booking: any, owner25Percent: number, opera
           <tr style="border-bottom: 1px solid #1e293b;"><td style="padding: 8px 0; color: #94a3b8;">Flight Number:</td><td style="padding: 8px 0; color: #f8fafc;">${guestFlight}</td></tr>
           <tr style="border-bottom: 1px solid #1e293b;"><td style="padding: 8px 0; color: #94a3b8;">Special Requests:</td><td style="padding: 8px 0; color: #f8fafc;">${specialRequests}</td></tr>
           <tr style="border-bottom: 1px solid #1e293b;"><td style="padding: 8px 0; color: #94a3b8;">Gross Volume (100%):</td><td style="padding: 8px 0; font-weight: bold; color: #f8fafc; font-family: monospace;">FJD $${grossFjd.toLocaleString()}</td></tr>
-          <tr><td style="padding: 8px 0; color: #94a3b8;">Operator Net Share (75%):</td><td style="padding: 8px 0; color: #f8fafc; font-family: monospace;">FJD $${operatorShare.toLocaleString()}</td></tr>
+          <tr><td style="padding: 8px 0; color: #94a3b8;">Operator Net Share (85%):</td><td style="padding: 8px 0; color: #f8fafc; font-family: monospace;">FJD $${operatorShare.toLocaleString()}</td></tr>
         </table>
 
         <div style="margin-top: 24px; padding: 12px 16px; background: #0f172a; border-radius: 10px; border: 1px solid #334155; font-size: 12px; color: #94a3b8;">
@@ -261,7 +280,7 @@ async function dispatchBookingEmails(booking: any, owner25Percent: number, opera
     </div>
   `;
 
-  const adminPlainText = `FIJI HAPS BACKEND NOTIFICATION: New Booking confirmed for ${listingName}. Voucher: ${voucherCode}. Lead Guest: ${guestName} (${guestEmail}, ${guestPhone}). Dates: ${dates}. Total Gross: FJD $${grossFjd}. 25% Platform Revenue: FJD $${owner25Percent} deposited to ${ownerBankAccount.bankName} (•••• ${ownerBankAccount.accountNumber.slice(-4)}). Provider dispatched: ${providerEmail}.`;
+  const adminPlainText = `FIJI HAPS BACKEND NOTIFICATION: New Booking confirmed for ${listingName}. Voucher: ${voucherCode}. Lead Guest: ${guestName} (${guestEmail}, ${guestPhone}). Dates: ${dates}. Total Gross: FJD $${grossFjd}. 15% Platform Revenue: FJD $${owner15Percent} deposited to ${ownerBankAccount.bankName} (•••• ${ownerBankAccount.accountNumber.slice(-4)}). Provider dispatched: ${providerEmail}.`;
 
   const adminEmailEntry: DispatchedEmail = {
     id: `EM-${Date.now()}-ADMIN`,
@@ -276,7 +295,7 @@ async function dispatchBookingEmails(booking: any, owner25Percent: number, opera
     status: 'delivered',
     listingName,
     grossAmountFjd: grossFjd,
-    owner25PercentCutFjd: owner25Percent,
+    owner15PercentCutFjd: owner15Percent,
     operatorShareFjd: operatorShare
   };
 
@@ -353,15 +372,79 @@ async function dispatchBookingEmails(booking: any, owner25Percent: number, opera
   dispatchedEmailsLog.unshift(providerEmailEntry);
 }
 
-// ================= API ENDPOINTS =================
+// ================= OWNER AUTHENTICATION ENDPOINTS =================
 
-// 1. Get Owner Bank Account Settings
-app.get('/api/owner/bank-account', (req, res) => {
+// 1. Owner Login (Passcode or Authorized Google Email)
+app.post('/api/owner/auth/login', (req, res) => {
+  const { passcode, email } = req.body;
+
+  // Passcode authentication
+  if (passcode && typeof passcode === 'string' && passcode.trim() === ownerSecurity.masterPasscode) {
+    const sessionToken = `fj-owner-${Math.random().toString(36).substring(2)}${Date.now()}`;
+    ownerSecurity.activeSessions.add(sessionToken);
+    return res.json({ 
+      success: true, 
+      token: sessionToken, 
+      ownerEmail: ownerSettings.backendEmail,
+      message: 'Owner authenticated successfully via passcode.' 
+    });
+  }
+
+  // Google OAuth email authentication (matches owner email)
+  if (email && typeof email === 'string' && ownerSecurity.authorizedEmails.includes(email.trim().toLowerCase())) {
+    const sessionToken = `fj-owner-${Math.random().toString(36).substring(2)}${Date.now()}`;
+    ownerSecurity.activeSessions.add(sessionToken);
+    return res.json({ 
+      success: true, 
+      token: sessionToken, 
+      ownerEmail: email.trim(),
+      message: 'Owner authenticated successfully via verified Google account.' 
+    });
+  }
+
+  return res.status(401).json({ 
+    success: false, 
+    error: 'Access denied: Incorrect owner passcode or unauthorized account.' 
+  });
+});
+
+// 2. Check Owner Authentication Status
+app.get('/api/owner/auth/check', (req, res) => {
+  const token = (req.headers['x-owner-token'] as string) || (req.headers.authorization?.replace(/^Bearer\s+/i, ''));
+  if (token && ownerSecurity.activeSessions.has(token)) {
+    return res.json({ authenticated: true, ownerEmail: ownerSettings.backendEmail });
+  }
+  return res.json({ authenticated: false });
+});
+
+// 3. Owner Logout (Revoke session token)
+app.post('/api/owner/auth/logout', (req, res) => {
+  const token = (req.headers['x-owner-token'] as string) || (req.headers.authorization?.replace(/^Bearer\s+/i, ''));
+  if (token) {
+    ownerSecurity.activeSessions.delete(token);
+  }
+  res.json({ success: true, message: 'Owner logged out successfully. Back-end locked.' });
+});
+
+// 4. Change Owner Passcode
+app.post('/api/owner/auth/change-passcode', requireOwnerAuth, (req, res) => {
+  const { newPasscode } = req.body;
+  if (!newPasscode || typeof newPasscode !== 'string' || newPasscode.trim().length < 4) {
+    return res.status(400).json({ success: false, error: 'New passcode must be at least 4 characters.' });
+  }
+  ownerSecurity.masterPasscode = newPasscode.trim();
+  res.json({ success: true, message: 'Owner master passcode updated successfully.' });
+});
+
+// ================= PROTECTED OWNER BACKEND ENDPOINTS (OWNER ONLY) =================
+
+// 1. Get Owner Bank Account Settings (Protected)
+app.get('/api/owner/bank-account', requireOwnerAuth, (req, res) => {
   res.json(ownerBankAccount);
 });
 
-// 2. Update Owner Bank Account Settings
-app.post('/api/owner/bank-account', (req, res) => {
+// 2. Update Owner Bank Account Settings (Protected)
+app.post('/api/owner/bank-account', requireOwnerAuth, (req, res) => {
   const { 
     bankName, 
     accountHolderName, 
@@ -387,10 +470,10 @@ app.post('/api/owner/bank-account', (req, res) => {
   res.json({ success: true, message: 'Bank account updated successfully', account: ownerBankAccount });
 });
 
-// 3. Get Owner Revenue & 25% Payout Ledger
-app.get('/api/owner/revenue-ledger', (req, res) => {
+// 3. Get Owner Revenue & 15% Payout Ledger (Protected)
+app.get('/api/owner/revenue-ledger', requireOwnerAuth, (req, res) => {
   const totalGross = backendBookingsLedger.reduce((sum, item) => sum + (item.grossBookingFjd || 0), 0);
-  const totalOwner25Payout = backendBookingsLedger.reduce((sum, item) => sum + (item.owner25PercentCutFjd || 0), 0);
+  const totalOwner15Payout = backendBookingsLedger.reduce((sum, item) => sum + (item.owner15PercentCutFjd || 0), 0);
 
   res.json({
     bankAccount: ownerBankAccount,
@@ -398,16 +481,16 @@ app.get('/api/owner/revenue-ledger', (req, res) => {
     ownerSettings,
     metrics: {
       totalGrossVolumeFjd: totalGross,
-      totalOwner25RevenueFjd: totalOwner25Payout,
+      totalOwner15RevenueFjd: totalOwner15Payout,
       totalBookingsCount: backendBookingsLedger.length,
-      payoutStatus: 'Automated 25% Bank Transfer Active',
+      payoutStatus: 'Automated 15% Bank Transfer Active',
       totalEmailsDispatched: dispatchedEmailsLog.length
     }
   });
 });
 
-// 4. Get All Dispatched Notification Emails (Backend & Provider)
-app.get('/api/owner/dispatched-emails', (req, res) => {
+// 4. Get All Dispatched Notification Emails (Protected)
+app.get('/api/owner/dispatched-emails', requireOwnerAuth, (req, res) => {
   res.json({
     success: true,
     count: dispatchedEmailsLog.length,
@@ -416,19 +499,22 @@ app.get('/api/owner/dispatched-emails', (req, res) => {
   });
 });
 
-// 5. Update Backend Admin Email Settings
-app.post('/api/owner/email-settings', (req, res) => {
+// 5. Update Backend Admin Email Settings (Protected)
+app.post('/api/owner/email-settings', requireOwnerAuth, (req, res) => {
   const { backendEmail } = req.body;
   if (backendEmail && backendEmail.includes('@')) {
     ownerSettings.backendEmail = backendEmail.trim();
+    if (!ownerSecurity.authorizedEmails.includes(backendEmail.trim().toLowerCase())) {
+      ownerSecurity.authorizedEmails.push(backendEmail.trim().toLowerCase());
+    }
     res.json({ success: true, message: 'Backend email updated successfully', ownerSettings });
   } else {
     res.status(400).json({ success: false, error: 'Invalid email address' });
   }
 });
 
-// 6. Resend Email Dispatch
-app.post('/api/owner/resend-email', async (req, res) => {
+// 6. Resend Email Dispatch (Protected)
+app.post('/api/owner/resend-email', requireOwnerAuth, async (req, res) => {
   const { emailId } = req.body;
   const emailItem = dispatchedEmailsLog.find(e => e.id === emailId);
   if (!emailItem) {
@@ -450,9 +536,9 @@ app.post('/api/bookings', async (req, res) => {
   const booking = req.body;
   const gross = Number(booking.totalPriceFjd) || 0;
   
-  // Backend automatically calculates and routes 25% of booking to owner's bank account
-  const owner25Percent = Math.round(gross * 0.25);
-  const operatorShare = gross - owner25Percent;
+  // Backend automatically calculates and routes 15% of booking to owner's bank account
+  const owner15Percent = Math.round(gross * 0.15);
+  const operatorShare = gross - owner15Percent;
 
   const ledgerEntry = {
     id: booking.id || `BK-${Date.now()}`,
@@ -460,7 +546,7 @@ app.post('/api/bookings', async (req, res) => {
     customerName: booking.guestInfo?.fullName || 'Tourist Guest',
     listingName: booking.listingName || 'Fiji Experience',
     grossBookingFjd: gross,
-    owner25PercentCutFjd: owner25Percent,
+    owner15PercentCutFjd: owner15Percent,
     operatorShareFjd: operatorShare,
     status: 'deposited_to_owner_bank',
     bankAccountTarget: `${ownerBankAccount.bankName} (•••• ${ownerBankAccount.accountNumber.slice(-4)})`,
@@ -468,12 +554,12 @@ app.post('/api/bookings', async (req, res) => {
   };
 
   backendBookingsLedger.unshift(ledgerEntry);
-  ownerBankAccount.totalPayoutsReceivedFjd += owner25Percent;
+  ownerBankAccount.totalPayoutsReceivedFjd += owner15Percent;
   ownerBankAccount.lastTransferDate = new Date().toISOString();
 
   // Send ONE email to the backend of the website AND ONE email to the provider
   try {
-    await dispatchBookingEmails(booking, owner25Percent, operatorShare);
+    await dispatchBookingEmails(booking, owner15Percent, operatorShare);
   } catch (err) {
     console.error('[EMAIL DISPATCH ERROR]', err);
   }
@@ -491,26 +577,54 @@ app.post('/api/bookings', async (req, res) => {
   });
 });
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
+  });
+});
+
 // ================= SERVER STARTUP & VITE INTEGRATION =================
 const PORT = 3000;
 
 async function start() {
-  if (process.env.NODE_ENV !== 'production') {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
-    });
-    app.use(vite.middlewares);
-  } else {
-    app.use(express.static('dist'));
-    app.get('*', (req, res) => {
-      res.sendFile(path.resolve('dist', 'index.html'));
-    });
-  }
+  try {
+    if (process.env.NODE_ENV !== 'production') {
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: 'spa',
+      });
+      app.use(vite.middlewares);
+    } else {
+      app.use(express.static('dist'));
+      app.get('*', (req, res) => {
+        res.sendFile(path.resolve('dist', 'index.html'));
+      });
+    }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`FIJI HAPS Full-Stack Server running at http://0.0.0.0:${PORT}`);
-  });
+    const server = app.listen(PORT, '0.0.0.0', () => {
+      console.log(`FIJI HAPS Full-Stack Server running at http://0.0.0.0:${PORT}`);
+    });
+
+    const shutdown = () => {
+      console.log('Shutting down server gracefully...');
+      server.close(() => {
+        process.exit(0);
+      });
+    };
+
+    process.on('SIGTERM', shutdown);
+    process.on('SIGINT', shutdown);
+  } catch (error) {
+    console.error('Fatal server startup failure:', error);
+    process.exit(1);
+  }
 }
 
-start();
+start().catch((err) => {
+  console.error('Unhandled server error:', err);
+  process.exit(1);
+});
+

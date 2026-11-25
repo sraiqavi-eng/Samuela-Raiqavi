@@ -61,9 +61,9 @@ export default function App() {
           guests: { adults: 2, children: 0 },
           optionSelected: 'Over-Water Bure',
           totalPriceFjd: 7200,
-          depositAmountFjd: 1800, // 25% received by FIJI HAPS app
-          balanceDueFjd: 5400, // 75% due to resort on arrival
-          commissionRate: 0.25,
+          depositAmountFjd: 1080, // 15% received by FIJI HAPS app
+          balanceDueFjd: 6120, // 85% due to resort on arrival
+          commissionRate: 0.15,
           paymentMethod: 'deposit_online_balance_arrival',
           guestInfo: {
             fullName: 'Alexander Wright',
