@@ -665,6 +665,41 @@ app.post('/api/bookings', async (req, res) => {
   }
 });
 
+// SEO: Robots & Sitemap for Google Search Console indexing
+function getSeoBaseUrl(req: express.Request): string {
+  if (process.env.APP_URL && process.env.APP_URL.includes('fijihaps.com')) {
+    return process.env.APP_URL.replace(/\/+$/, '');
+  }
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://fijihaps.com';
+  }
+  return (
+    process.env.APP_URL?.replace(/\/+$/, '') ||
+    `${req.headers['x-forwarded-proto'] || req.protocol}://${req.get('host')}`
+  );
+}
+
+app.get('/robots.txt', (req, res) => {
+  const baseUrl = getSeoBaseUrl(req);
+  res.type('text/plain').send(
+    `User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${baseUrl}/sitemap.xml\n`
+  );
+});
+
+app.get('/sitemap.xml', (req, res) => {
+  const baseUrl = getSeoBaseUrl(req);
+  const lastMod = new Date().toISOString().split('T')[0];
+  res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${baseUrl}/</loc>
+    <lastmod>${lastMod}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>`);
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({

@@ -114,6 +114,36 @@ export default function App() {
     }
   }, [savedIds]);
 
+  // Sync dynamic canonical URL & absolute OpenGraph share tags
+  useEffect(() => {
+    try {
+      const origin = window.location.origin;
+      const canonicalUrl = origin + window.location.pathname;
+      let canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+      if (!canonical) {
+        canonical = document.createElement('link');
+        canonical.rel = 'canonical';
+        document.head.appendChild(canonical);
+      }
+      canonical.href = canonicalUrl;
+
+      let ogUrl = document.querySelector<HTMLMetaElement>('meta[property="og:url"]');
+      if (!ogUrl) {
+        ogUrl = document.createElement('meta');
+        ogUrl.setAttribute('property', 'og:url');
+        document.head.appendChild(ogUrl);
+      }
+      ogUrl.content = canonicalUrl;
+
+      const ogImage = document.querySelector<HTMLMetaElement>('meta[property="og:image"]');
+      if (ogImage) ogImage.content = `${origin}/og-cover.jpg`;
+      const twImage = document.querySelector<HTMLMetaElement>('meta[name="twitter:image"]');
+      if (twImage) twImage.content = `${origin}/og-cover.jpg`;
+    } catch {
+      // Ignore SSR/non-browser environments
+    }
+  }, []);
+
   // Sync bookings to localStorage
   useEffect(() => {
     try {
