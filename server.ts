@@ -587,7 +587,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // ================= SERVER STARTUP & VITE INTEGRATION =================
-const PORT = 3000;
+const PORT = process.env.NODE_ENV === 'production' ? (Number(process.env.PORT) || 3000) : 3000;
 
 async function start() {
   try {
